@@ -22,6 +22,9 @@ import java.util.*;
  */
 public class HeapFile implements DbFile {
 
+    private File file;
+    private TupleDesc tupleDesc;
+
     /**
      * Constructs a heap file backed by the specified file.
      * 
@@ -31,6 +34,8 @@ public class HeapFile implements DbFile {
      */
     public HeapFile(File f, TupleDesc td) {
         // some code goes here
+        this.file = f;
+        this.tupleDesc = td;
     }
 
     /**
@@ -40,7 +45,7 @@ public class HeapFile implements DbFile {
      */
     public File getFile() {
         // some code goes here
-        return null;
+        return file;
     }
 
     /**
@@ -54,7 +59,7 @@ public class HeapFile implements DbFile {
      */
     public int getId() {
         // some code goes here
-        throw new UnsupportedOperationException("implement this");
+        return file.getAbsoluteFile().hashCode();
     }
 
     /**
@@ -64,14 +69,49 @@ public class HeapFile implements DbFile {
      */
     public TupleDesc getTupleDesc() {
         // some code goes here
-        throw new UnsupportedOperationException("implement this");
+        return tupleDesc;
     }
 
     // see DbFile.java for javadocs
     public Page readPage(PageId pid) {
         // some code goes here
-        return null;
+        int tableId = pid.getTableId();
+        int pgNo = pid.getPageNumber();
+        int offset = pgNo * BufferPool.getPageSize();
+        RandomAccessFile randomAccessFile = null;
+
+        try{
+            randomAccessFile = new RandomAccessFile(file,"r");
+            // 起码有pgNo页那么大小就应该大于pgNo
+            if((long) (pgNo + 1) *BufferPool.getPageSize() > randomAccessFile.length()){
+                randomAccessFile.close();
+                throw new IllegalArgumentException(String.format("table %d page %d is invalid", tableId, pgNo));
+            }
+            byte[] bytes = new byte[BufferPool.getPageSize()];
+            // 移动偏移量到文件开头，并计算是否change
+            randomAccessFile.seek(offset);
+            int read = randomAccessFile.read(bytes,0,BufferPool.getPageSize());
+            // Do not load the entire table into memory on the open() call
+            // -- this will cause an out of memory error for very large tables.
+            if(read != BufferPool.getPageSize()){
+                throw new IllegalArgumentException(String.format("table %d page %d read %d bytes not equal to BufferPool.getPageSize() ", tableId, pgNo, read));
+            }
+            HeapPageId id = new HeapPageId(pid.getTableId(),pid.getPageNumber());
+            return new HeapPage(id,bytes);
+        }catch (IOException e){
+            e.printStackTrace();
+        }finally {
+            try{
+                if(randomAccessFile != null){
+                    randomAccessFile.close();
+                }
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        throw new IllegalArgumentException(String.format("table %d page %d is invalid", tableId, pgNo));
     }
+
 
     // see DbFile.java for javadocs
     public void writePage(Page page) throws IOException {
@@ -84,7 +124,7 @@ public class HeapFile implements DbFile {
      */
     public int numPages() {
         // some code goes here
-        return 0;
+        return (int) getFile().length() / BufferPool.getPageSize();
     }
 
     // see DbFile.java for javadocs
