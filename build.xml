@@ -245,10 +245,10 @@
         <fail unless="test" message="You must run this target with -Dtest=TestName"/>
 
         <!-- Check if the class exists -->
-        <available property="test.exists" classname="${basedir}.test.simpledb.${test}">
+        <available property="test.exists" classname="test.simpledb.${test}">
             <classpath refid="classpath.test" />
         </available>
-        <fail unless="test.exists" message="Test ${basedir}.test.simpledb.${test} could not be found"/>
+        <fail unless="test.exists" message="Test ${test} could not be found"/>
 
         <RunJunit>
             <test name="simpledb.${test}"/>

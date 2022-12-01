@@ -12,7 +12,7 @@ import java.util.*;
  */
 public class TupleDesc implements Serializable {
 
-    private List<TDItem>tdItems = new ArrayList<>();
+    private List<TDItem>tdItems;
     /**
      * A help class to facilitate organizing the information of each field
      * */
@@ -168,10 +168,19 @@ public class TupleDesc implements Serializable {
      */
     public static TupleDesc merge(TupleDesc td1, TupleDesc td2) {
         // some code goes here
-        List<TDItem> newTDItems = td1.tdItems;
-        List<TDItem> tdItems = td2.tdItems;
-        newTDItems.addAll(tdItems);
-        return null;
+        List<TDItem> tdItems1 = td1.tdItems;
+        List<TDItem> tdItems2 = td2.tdItems;
+        Type[] types = new Type[tdItems1.size()+ tdItems2.size()];
+        String[] strings = new String[tdItems1.size()+ tdItems2.size()];
+        for(int i = 0;i < tdItems1.size();i++){
+            types[i] = tdItems1.get(i).fieldType;
+            strings[i] = tdItems1.get(i).fieldName;
+        }
+        for(int i = tdItems1.size();i < tdItems1.size() + tdItems2.size();i++){
+            types[i] = tdItems2.get(i - tdItems1.size()).fieldType;
+            strings[i] = tdItems2.get(i - tdItems1.size()).fieldName;
+        }
+        return new TupleDesc(types,strings);
     }
 
     /**
