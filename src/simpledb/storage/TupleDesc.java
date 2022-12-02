@@ -12,6 +12,7 @@ import java.util.*;
  */
 public class TupleDesc implements Serializable {
 
+    private String tableAlias;
     private List<TDItem>tdItems;
     /**
      * A help class to facilitate organizing the information of each field
@@ -103,6 +104,9 @@ public class TupleDesc implements Serializable {
      */
     public String getFieldName(int i) throws NoSuchElementException {
         // some code goes here
+        if(this.tableAlias != null){
+            return this.tableAlias + "." + tdItems.get(i).fieldName;
+        }
         return tdItems.get(i).fieldName;
     }
 
@@ -196,15 +200,14 @@ public class TupleDesc implements Serializable {
 
     public boolean equals(Object o) {
         // some code goes here
-        if(this == o){
-            return true;
-        }
-        if(o == null || getClass() != o.getClass()){
+        if(! (o instanceof TupleDesc tupleDesc)){
             return false;
         }
-        TupleDesc tupleDesc = (TupleDesc) o;
-        for (int i=0;i<tdItems.size();i++){
-            if(!tdItems.get(i).fieldType.equals(tupleDesc.tdItems.get(i).fieldType)){
+        if(tupleDesc.getSize() != this.getSize() || tupleDesc.numFields() != this.numFields()){
+            return false;
+        }
+        for(int i = 0;i < tupleDesc.numFields();i++){
+            if(!this.getFieldType(i).equals(tupleDesc.getFieldType(i))){
                 return false;
             }
         }
@@ -232,5 +235,9 @@ public class TupleDesc implements Serializable {
             res.append(tdItem.fieldType.toString()).append("[").append(i).append("](").append(tdItem.fieldName).append("[").append(i).append("])");
         }
         return res.toString();
+    }
+
+    public void setTableAlias(String tableAlias){
+        this.tableAlias = tableAlias;
     }
 }
