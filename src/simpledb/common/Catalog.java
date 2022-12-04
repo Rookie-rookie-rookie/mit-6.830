@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * For now, this is a stub catalog that must be populated with tables by a
  * user program before it can be used -- eventually, this should be converted
  * to a catalog that reads a catalog table from disk.
- * 
+ * 在数据库中充当了一个目录的作用，保存了不同的表的映射关系，用于迅速找到表
  * @Threadsafe
  */
 public class Catalog {

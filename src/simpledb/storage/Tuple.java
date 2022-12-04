@@ -10,6 +10,7 @@ import java.util.List;
  * Tuple maintains information about the contents of a tuple. Tuples have a
  * specified schema specified by a TupleDesc object and contain Field objects
  * with the data for each field.
+ * Tuple即元组
  */
 public class Tuple implements Serializable {
 

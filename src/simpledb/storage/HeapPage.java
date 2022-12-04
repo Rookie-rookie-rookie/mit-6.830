@@ -12,7 +12,7 @@ import java.io.*;
 /**
  * Each instance of HeapPage stores data for one page of HeapFiles and 
  * implements the Page interface that is used by BufferPool.
- *
+ * Page接口的实现方式之一
  * @see HeapFile
  * @see BufferPool
  *
@@ -21,9 +21,9 @@ public class HeapPage implements Page {
 
     final HeapPageId pid;
     final TupleDesc td;
-    final byte[] header;
+    final byte[] header;//位图
     final Tuple[] tuples;
-    final int numSlots;
+    final int numSlots; //插槽的数量，表示可以存储的tuple的数量
 
     byte[] oldData;
     private final Byte oldDataLock= (byte) 0;
@@ -93,8 +93,7 @@ public class HeapPage implements Page {
     public HeapPage getBeforeImage(){
         try {
             byte[] oldDataRef = null;
-            synchronized(oldDataLock)
-            {
+            synchronized(oldDataLock) {
                 oldDataRef = oldData;
             }
             return new HeapPage(pid,oldDataRef);
@@ -107,8 +106,7 @@ public class HeapPage implements Page {
     }
     
     public void setBeforeImage() {
-        synchronized(oldDataLock)
-        {
+        synchronized(oldDataLock) {
         oldData = getPageData().clone();
         }
     }
@@ -118,7 +116,7 @@ public class HeapPage implements Page {
      */
     public HeapPageId getId() {
     // some code goes here
-    return this.pid;
+        return this.pid;
     }
 
     /**

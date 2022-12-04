@@ -55,23 +55,15 @@ public class IntField implements Field {
 
         IntField iVal = (IntField) val;
 
-        switch (op) {
-            case EQUALS:
-            case LIKE:
-                return value == iVal.value;
-            case NOT_EQUALS:
-                return value != iVal.value;
-            case GREATER_THAN:
-                return value > iVal.value;
-            case GREATER_THAN_OR_EQ:
-                return value >= iVal.value;
-            case LESS_THAN:
-                return value < iVal.value;
-            case LESS_THAN_OR_EQ:
-                return value <= iVal.value;
-        }
+        return switch (op) {
+            case EQUALS, LIKE -> value == iVal.value;
+            case NOT_EQUALS -> value != iVal.value;
+            case GREATER_THAN -> value > iVal.value;
+            case GREATER_THAN_OR_EQ -> value >= iVal.value;
+            case LESS_THAN -> value < iVal.value;
+            case LESS_THAN_OR_EQ -> value <= iVal.value;
+        };
 
-        return false;
     }
 
     /**

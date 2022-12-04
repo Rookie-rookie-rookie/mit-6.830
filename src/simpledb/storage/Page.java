@@ -32,6 +32,7 @@ public interface Page {
 
   /**
    * Set the dirty state of this page as dirtied by a particular transaction
+   * 标记脏位，抛弃时要写回
    */
   void markDirty(boolean dirty, TransactionId tid);
 

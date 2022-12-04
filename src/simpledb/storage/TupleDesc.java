@@ -9,6 +9,7 @@ import java.util.*;
 
 /**
  * TupleDesc describes the schema of a tuple.
+ * TupleDesc 描述了一个Tuple的结构，包含内部元素的类型和名称
  */
 public class TupleDesc implements Serializable {
 
@@ -16,6 +17,7 @@ public class TupleDesc implements Serializable {
     private List<TDItem>tdItems;
     /**
      * A help class to facilitate organizing the information of each field
+     * 储存每一个field的信息
      * */
     public static class TDItem implements Serializable {
 

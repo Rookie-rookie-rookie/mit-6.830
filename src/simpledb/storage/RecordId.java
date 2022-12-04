@@ -5,6 +5,7 @@ import java.io.Serializable;
 /**
  * A RecordId is a reference to a specific tuple on a specific page of a
  * specific table.
+ * RecordId用于标记某个页中某个表中的某个元组
  */
 public class RecordId implements Serializable {
 

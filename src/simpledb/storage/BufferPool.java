@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * The BufferPool is also responsible for locking;  when a transaction fetches
  * a page, BufferPool checks that the transaction has the appropriate
  * locks to read/write the page.
- * 
+ * 高速缓存，储存从磁盘上读入的页面
  * @Threadsafe, all fields are final
  */
 public class BufferPool {
@@ -79,7 +79,7 @@ public class BufferPool {
     public  Page getPage(TransactionId tid, PageId pid, Permissions perm)
         throws TransactionAbortedException, DbException {
         Page page = pageMap.get(pid);
-        if(page == null){
+        if(page == null){//如果在缓存里面，就从磁盘读上来？
             DbFile dbFile = Database.getCatalog().getDatabaseFile(pid.getTableId());
             page = dbFile.readPage(pid);
             pageMap.put(pid,page);
@@ -181,10 +181,10 @@ public class BufferPool {
             throw new DbException("not such a table");
         }
         DbFile dbFile = Database.getCatalog().getDatabaseFile(recordId.getPageId().getTableId());
-        List<Page> pages = dbFile.deleteTuple(tid,t);
+        List<Page> pages = dbFile.deleteTuple(tid,t);//先删掉
         for(Page page:pages){
-            dbFile.writePage(page);
-            page.markDirty(true,tid);
+            dbFile.writePage(page);//写回dbFile
+            page.markDirty(true,tid);//标记脏位
         }
     }
 

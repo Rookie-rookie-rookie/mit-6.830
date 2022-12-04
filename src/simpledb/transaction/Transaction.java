@@ -7,6 +7,7 @@ import java.io.*;
 /**
  * Transaction encapsulates information about the state of
  * a transaction and manages transaction commit / abort.
+ * 一次操作，tid为其标识
  */
 
 public class Transaction {
