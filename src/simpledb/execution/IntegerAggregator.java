@@ -1,7 +1,11 @@
 package simpledb.execution;
 
 import simpledb.common.Type;
-import simpledb.storage.Tuple;
+import simpledb.storage.*;
+
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.util.*;
 
 /**
  * Knows how to compute some aggregate over a set of IntFields.
@@ -13,6 +17,8 @@ public class IntegerAggregator implements Aggregator {
     private Type gbfieldtype;
     private int afield;
     private Op what;
+    private TupleDesc tupleDesc;
+    private Map<Field,AggResult> results = new LinkedHashMap<>();
 
     /**
      * Aggregate constructor
@@ -35,6 +41,9 @@ public class IntegerAggregator implements Aggregator {
         this.gbfieldtype = gbfieldtype;
         this.afield = afield;
         this.what = what;
+        this.tupleDesc = this.gbfield != Aggregator.NO_GROUPING ?
+                new TupleDesc(new Type[]{gbfieldtype,Type.INT_TYPE}) :
+                new TupleDesc(new Type[]{Type.INT_TYPE});
     }
 
     /**
@@ -46,6 +55,14 @@ public class IntegerAggregator implements Aggregator {
      */
     public void mergeTupleIntoGroup(Tuple tup) {
         // some code goes here
+        Field field;
+        if(gbfield != Aggregator.NO_GROUPING){
+            field = tup.getField(gbfield);
+        }else{
+            field = Aggregator.EMPTY_FIELD;
+        }
+        int value = ((IntField) tup.getField(afield)).getValue();
+        results.computeIfAbsent(field, k -> new AggResult(what)).merge(value);
     }
 
     /**
@@ -58,8 +75,50 @@ public class IntegerAggregator implements Aggregator {
      */
     public OpIterator iterator() {
         // some code goes here
-        throw new
-        UnsupportedOperationException("please implement me for lab2");
+        List<Tuple> tuples = new ArrayList<>();
+        for(Map.Entry<Field,AggResult> entry:results.entrySet()){
+            Tuple tuple = new Tuple(tupleDesc);
+            if(gbfield != Aggregator.NO_GROUPING){
+                tuple.setField(0,entry.getKey());
+                tuple.setField(1,new IntField(entry.getValue().intResult()));
+            }else{
+                tuple.setField(0,new IntField(entry.getValue().intResult()));
+            }
+            tuples.add(tuple);
+        }
+        return new TupleIterator(tupleDesc,tuples);
+    }
+
+    private static class AggResult{
+        private final Op op;
+        private int count;
+        private float result;
+
+        private AggResult(Op op){
+            this.op = op;
+        }
+
+        public void merge(int value){
+            if(count == 0){
+                result = value;
+                count = 1;
+                return;
+            }
+            switch (op){
+                case MIN -> result = Math.min(result,value);
+                case MAX -> result = Math.max(result,value);
+                case SUM -> result += value;
+                case AVG -> result = (result * count + value) / (count + 1);
+            }
+            count = count + 1;
+        }
+
+        public int intResult(){
+            if(op == Op.COUNT){
+                return count;
+            }
+            return (int)result;
+        }
     }
 
 }

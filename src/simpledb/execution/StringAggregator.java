@@ -1,7 +1,12 @@
 package simpledb.execution;
 
 import simpledb.common.Type;
-import simpledb.storage.Tuple;
+import simpledb.storage.*;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Knows how to compute some aggregate over a set of StringFields.
@@ -9,6 +14,12 @@ import simpledb.storage.Tuple;
 public class StringAggregator implements Aggregator {
 
     private static final long serialVersionUID = 1L;
+    private int gbfield;
+    private Type gbfieldtype;
+    private int afield;
+    private Op what;
+    private TupleDesc tupleDesc;
+    private Map<Field, StringAggregator.AggResult> results = new LinkedHashMap<>();
 
     /**
      * Aggregate constructor
@@ -21,6 +32,13 @@ public class StringAggregator implements Aggregator {
 
     public StringAggregator(int gbfield, Type gbfieldtype, int afield, Op what) {
         // some code goes here
+        this.gbfield = gbfield;
+        this.gbfieldtype = gbfieldtype;
+        this.afield = afield;
+        this.what = what;
+        this.tupleDesc = this.gbfield != Aggregator.NO_GROUPING ?
+                new TupleDesc(new Type[]{gbfieldtype,Type.INT_TYPE}) :
+                new TupleDesc(new Type[]{Type.INT_TYPE});
     }
 
     /**
@@ -29,6 +47,13 @@ public class StringAggregator implements Aggregator {
      */
     public void mergeTupleIntoGroup(Tuple tup) {
         // some code goes here
+        Field field;
+        if(gbfield != Aggregator.NO_GROUPING){
+            field = tup.getField(gbfield);
+        }else{
+            field = Aggregator.EMPTY_FIELD;
+        }
+        results.computeIfAbsent(field,k -> new AggResult()).merge();
     }
 
     /**
@@ -41,7 +66,30 @@ public class StringAggregator implements Aggregator {
      */
     public OpIterator iterator() {
         // some code goes here
-        throw new UnsupportedOperationException("please implement me for lab2");
+        List<Tuple> tuples = new ArrayList<>();
+        for(Map.Entry<Field,AggResult>entry:results.entrySet()){
+            Tuple tuple = new Tuple(tupleDesc);
+            if(gbfield != Aggregator.NO_GROUPING){
+                tuple.setField(0,entry.getKey());
+                tuple.setField(1,new IntField(entry.getValue().stringResult()));
+            }else{
+                tuple.setField(0,new IntField(entry.getValue().stringResult()));
+            }
+            tuples.add(tuple);
+        }
+        return new TupleIterator(tupleDesc,tuples);
+    }
+
+    private static class AggResult{
+        private int count;
+
+        public void merge(){
+            count++;
+        }
+
+        public int stringResult(){
+            return count;
+        }
     }
 
 }
