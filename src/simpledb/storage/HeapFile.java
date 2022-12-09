@@ -24,70 +24,6 @@ public class HeapFile implements DbFile {
     private File file;
     private TupleDesc tupleDesc;
 
-    private static final class HeapFileIterator implements DbFileIterator{
-        private final HeapFile heapFile;
-        private final TransactionId transactionId;
-        private Iterator<Tuple> tupleIterator;
-        private int index;
-
-        public HeapFileIterator(HeapFile heapFile,TransactionId transactionId){
-            this.heapFile = heapFile;
-            this.transactionId = transactionId;
-        }
-
-        @Override
-        public void open() throws DbException, TransactionAbortedException {
-            index = 0;
-            tupleIterator = getTupleIterator(index);
-        }
-
-        private Iterator<Tuple> getTupleIterator(int pageNumber) throws DbException, TransactionAbortedException {
-            if(pageNumber >= 0 && pageNumber < heapFile.numPages()){
-                HeapPageId heapPageId = new HeapPageId(heapFile.getId(), pageNumber);
-                HeapPage heapPage = (HeapPage) Database.getBufferPool().getPage(transactionId,heapPageId,Permissions.READ_ONLY);
-                return heapPage.iterator();
-            }else{
-                throw new DbException(String.format("heapFile %d  does not exist in page[%d]!", pageNumber,heapFile.getId()));
-            }
-        }
-
-        @Override
-        public boolean hasNext() throws DbException, TransactionAbortedException {
-            if(tupleIterator == null){
-                return false;
-            }
-            if(tupleIterator.hasNext()){
-                return true;
-            }else{
-                if(index < heapFile.numPages() - 1){
-                    index++;
-                    tupleIterator = getTupleIterator(index);
-                    return tupleIterator.hasNext();
-                }else{
-                    return false;
-                }
-            }
-        }
-
-        @Override
-        public Tuple next() throws DbException, TransactionAbortedException, NoSuchElementException {
-            if(tupleIterator == null || !tupleIterator.hasNext()){
-                throw new NoSuchElementException();
-            }
-            return tupleIterator.next();
-        }
-
-        @Override
-        public void rewind() throws DbException, TransactionAbortedException {
-            close();
-            open();
-        }
-
-        @Override
-        public void close() {
-            tupleIterator = null;
-        }
-    }
 
     /**
      * Constructs a heap file backed by the specified file.
@@ -235,7 +171,7 @@ public class HeapFile implements DbFile {
     // see DbFile.java for javadocs
     public DbFileIterator iterator(TransactionId tid) {
         // some code goes here
-        return new HeapFileIterator(this,tid);
+        return new HeapFileDBIterator(this,tid);
     }
 
 }

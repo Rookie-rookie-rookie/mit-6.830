@@ -1,6 +1,8 @@
 package simpledb.storage;
 
+import simpledb.common.Database;
 import simpledb.common.DbException;
+import simpledb.common.Permissions;
 import simpledb.transaction.TransactionAbortedException;
 import simpledb.transaction.TransactionId;
 
@@ -22,22 +24,60 @@ public class HeapFileDBIterator implements DbFileIterator{
     }
     @Override
     public void open() throws DbException, TransactionAbortedException {
-
+        if(pageCur >= heapFile.numPages()){
+            return;
+        }
+        PageId pageId = new HeapPageId(tableId, pageCur);
+        HeapPage page = (HeapPage) Database.getBufferPool().getPage(tid, pageId, Permissions.READ_ONLY);
+        tupleIterator = page.iterator();
     }
 
     @Override
     public boolean hasNext() throws DbException, TransactionAbortedException {
-        return false;
+        if(tupleIterator == null){
+            return false;
+        }
+        while (true){
+            if(tupleIterator.hasNext()){
+                return true;
+            }
+            pageCur++;
+            if(pageCur >= heapFile.numPages()){
+                tupleIterator = null;
+                return false;
+            }
+            PageId pageId = new HeapPageId(tableId,pageCur);
+            HeapPage page = (HeapPage) Database.getBufferPool().getPage(tid,pageId,Permissions.READ_ONLY);
+            tupleIterator = page.iterator();
+        }
     }
 
     @Override
     public Tuple next() throws DbException, TransactionAbortedException, NoSuchElementException {
-        return null;
+        if(tupleIterator == null){
+            return null;
+        }
+        while (true){
+            if(tupleIterator.hasNext()){
+                return tupleIterator.next();
+            }
+            pageCur++;
+            if(pageCur >= heapFile.numPages()){
+                tupleIterator = null;
+                throw new NoSuchElementException();
+            }
+            PageId pageId = new HeapPageId(tableId,pageCur);
+            HeapPage page = (HeapPage) Database.getBufferPool().getPage(tid,pageId,Permissions.READ_ONLY);
+            tupleIterator = page.iterator();
+        }
     }
 
     @Override
     public void rewind() throws DbException, TransactionAbortedException {
-
+        pageCur = 0;
+        PageId pageId = new HeapPageId(tableId,pageCur);
+        HeapPage page = (HeapPage) Database.getBufferPool().getPage(tid,pageId,Permissions.READ_ONLY);
+        tupleIterator = page.iterator();
     }
 
     @Override
