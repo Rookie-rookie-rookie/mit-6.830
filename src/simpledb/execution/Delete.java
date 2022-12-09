@@ -83,6 +83,7 @@ public class Delete extends Operator {
             }catch (IOException e){
                 throw new DbException(e.getMessage());
             }
+            cnt++;
         }
         executed = true;
         Tuple tuple = new Tuple(tupleDesc);
