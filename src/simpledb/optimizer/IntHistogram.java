@@ -6,6 +6,12 @@ import simpledb.execution.Predicate;
  */
 public class IntHistogram {
 
+    private int [] buckets;
+    private int min;
+    private int max;
+    private int ntups;
+    private int width;
+
     /**
      * Create a new IntHistogram.
      * 
@@ -24,6 +30,11 @@ public class IntHistogram {
      */
     public IntHistogram(int buckets, int min, int max) {
     	// some code goes here
+        this.buckets = new int[buckets];
+        this.min = min;
+        this.max = max;
+        this.ntups = 0;
+        this.width = Math.max(1,(1 + max - min)/buckets);
     }
 
     /**
@@ -32,6 +43,11 @@ public class IntHistogram {
      */
     public void addValue(int v) {
     	// some code goes here
+        if(v < min || v > max){
+            return;
+        }
+        ntups++;
+        buckets[(Math.min((v - min) / width,buckets.length-1))]++;
     }
 
     /**
@@ -47,6 +63,51 @@ public class IntHistogram {
     public double estimateSelectivity(Predicate.Op op, int v) {
 
     	// some code goes here
+        int index = (Math.min((v - min) / width,buckets.length-1));
+        if(op.equals(Predicate.Op.EQUALS)){
+            if(index < 0 || index > buckets.length){
+                return 0.0;
+            }
+            return (double) (buckets[index] / width) / ntups;
+        }
+        if(op.equals(Predicate.Op.NOT_EQUALS)){
+            return 1.0 - estimateSelectivity(Predicate.Op.EQUALS,v);
+        }
+        if(op.equals(Predicate.Op.GREATER_THAN)){
+            if(v < min){
+                return 1.0;
+            }
+            if(v > max){
+                return 0.0;
+            }
+            int cnt = 0;
+            for(int i = index+1;i < buckets.length;i++){
+                cnt += buckets[i];
+            }
+            double b_f = 1.0 * buckets[index] / ntups;
+            double b_part = (double) ((index + 1) * width - v) / width;
+            return b_f * b_part + 1.0 * cnt / ntups;
+        }
+        if(op.equals(Predicate.Op.LESS_THAN)){
+            if(v <= min){
+                return 0.0;
+            }
+            if(v >= max){
+                return 1.0;
+            }
+
+            return 1.0 - estimateSelectivity(Predicate.Op.EQUALS,v) - estimateSelectivity(Predicate.Op.GREATER_THAN,v);
+        }
+        if(op.equals(Predicate.Op.GREATER_THAN_OR_EQ)){
+            if (v < min) return 1.0;
+            if (v > max) return 0.0;
+            return 1.0 - estimateSelectivity(Predicate.Op.LESS_THAN,v);
+        }
+        if(op.equals(Predicate.Op.LESS_THAN_OR_EQ)){
+            if (v <= min) return 0.0;
+            if (v >= max) return 1.0;
+            return 1.0 - estimateSelectivity(Predicate.Op.GREATER_THAN,v);
+        }
         return -1.0;
     }
     
@@ -61,7 +122,11 @@ public class IntHistogram {
     public double avgSelectivity()
     {
         // some code goes here
-        return 1.0;
+        double res = 0;
+        for(int num:buckets){
+            res += (double) num;
+        }
+        return res;
     }
     
     /**
