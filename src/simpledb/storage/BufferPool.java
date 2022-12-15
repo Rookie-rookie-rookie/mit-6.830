@@ -9,9 +9,7 @@ import simpledb.transaction.TransactionId;
 
 import java.io.*;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -35,8 +33,8 @@ public class BufferPool {
     other classes. BufferPool should use the numPages argument to the
     constructor instead. */
     public static final int DEFAULT_PAGES = 50;
-    private int maxNum;
-    private Map<PageId,Page> pageMap = new HashMap<>();
+    public int maxNum;
+    public Map<PageId,Page> pageMap = new HashMap<>();
 
     /**
      * Creates a BufferPool that caches up to numPages pages.
@@ -82,6 +80,9 @@ public class BufferPool {
         if(page == null){//如果在缓存里面，就从磁盘读上来？
             DbFile dbFile = Database.getCatalog().getDatabaseFile(pid.getTableId());
             page = dbFile.readPage(pid);
+            while (pageMap.size() > maxNum){
+                evictPage();
+            }
             pageMap.put(pid,page);
         }
         return page;
@@ -154,6 +155,9 @@ public class BufferPool {
         DbFile dbFile = Database.getCatalog().getDatabaseFile(tableId);
         List<Page> pages = dbFile.insertTuple(tid,t);
         for(Page page:pages){
+            while (pageMap.size() > maxNum){
+                evictPage();
+            }
             pageMap.put(page.getId(), page);
             page.markDirty(true,tid);
         }
@@ -196,7 +200,9 @@ public class BufferPool {
     public synchronized void flushAllPages() throws IOException {
         // some code goes here
         // not necessary for lab1
-
+        for(PageId pageId:pageMap.keySet()){
+            flushPage(pageId);
+        }
     }
 
     /** Remove the specific page id from the buffer pool.
@@ -210,6 +216,7 @@ public class BufferPool {
     public synchronized void discardPage(PageId pid) {
         // some code goes here
         // not necessary for lab1
+        pageMap.remove(pid);
     }
 
     /**
@@ -219,6 +226,15 @@ public class BufferPool {
     private synchronized  void flushPage(PageId pid) throws IOException {
         // some code goes here
         // not necessary for lab1
+        Page page = pageMap.get(pid);
+        TransactionId tid;
+        if((tid = page.isDirty()) != null){
+            Database.getLogFile().logWrite(tid,page.getBeforeImage(),page);
+            Database.getLogFile().force();
+            // write to disk
+            Database.getCatalog().getDatabaseFile(pid.getTableId()).writePage(page);
+            page.markDirty(false,null);
+        }
     }
 
     /** Write all pages of the specified transaction to disk.
@@ -235,6 +251,13 @@ public class BufferPool {
     private synchronized  void evictPage() throws DbException {
         // some code goes here
         // not necessary for lab1
+        PageId pageId = new ArrayList<>(pageMap.keySet()).get(0);
+        try {
+            flushPage(pageId);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        discardPage(pageId);
     }
 
 }
