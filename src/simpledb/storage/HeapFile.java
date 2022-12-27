@@ -139,6 +139,7 @@ public class HeapFile implements DbFile {
             try{
                 page = (HeapPage) Database.getBufferPool().getPage(tid,pageId,Permissions.READ_WRITE);
                 if(page.getNumEmptySlots() == 0){
+                    Database.getBufferPool().unsafeReleasePage(tid,pageId);
                     continue;
                 }
             } catch (IllegalArgumentException e) {
