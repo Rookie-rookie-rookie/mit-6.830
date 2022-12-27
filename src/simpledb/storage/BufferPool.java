@@ -4,6 +4,8 @@ import simpledb.common.Database;
 import simpledb.common.Permissions;
 import simpledb.common.DbException;
 import simpledb.common.DeadlockException;
+import simpledb.lock.Lock;
+import simpledb.lock.LockManager;
 import simpledb.transaction.TransactionAbortedException;
 import simpledb.transaction.TransactionId;
 
@@ -35,6 +37,7 @@ public class BufferPool {
     public static final int DEFAULT_PAGES = 50;
     public int maxNum;
     public Map<PageId,Page> pageMap = new HashMap<>();
+    public LockManager lockManager = new LockManager();
 
     /**
      * Creates a BufferPool that caches up to numPages pages.
@@ -76,6 +79,16 @@ public class BufferPool {
      */
     public  Page getPage(TransactionId tid, PageId pid, Permissions perm)
         throws TransactionAbortedException, DbException {
+        Lock.TYPE type = perm == Permissions.READ_ONLY ? Lock.TYPE.SHARE : Lock.TYPE.EXCLUSIVE;
+        while (true){
+            try{
+                if(lockManager.requestLock(pid,tid,type)){
+                    break;
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
         Page page = pageMap.get(pid);
         if(page == null){//如果在缓存里面，就从磁盘读上来？
             DbFile dbFile = Database.getCatalog().getDatabaseFile(pid.getTableId());
@@ -100,8 +113,7 @@ public class BufferPool {
     public  void unsafeReleasePage(TransactionId tid, PageId pid) {
         // some code goes here
         // not necessary for lab1|lab2
-        Page page = pageMap.get(pid);
-
+        lockManager.releaseLock(pid,tid);
     }
 
     /**
@@ -118,7 +130,7 @@ public class BufferPool {
     public boolean holdsLock(TransactionId tid, PageId p) {
         // some code goes here
         // not necessary for lab1|lab2
-        return false;
+        return lockManager.isHoldingLock(p,tid);
     }
 
     /**
