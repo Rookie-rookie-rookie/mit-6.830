@@ -6,6 +6,7 @@ import simpledb.transaction.TransactionAbortedException;
 import simpledb.transaction.TransactionId;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class LockManager {
@@ -95,5 +96,12 @@ public class LockManager {
             return false;
         }
         return pageLock.get(tid) != null;
+    }
+
+    public synchronized void transactionComplete(TransactionId tid){
+        Set<PageId> pageIdSet = pageLocks.keySet();
+        for(PageId pageId:pageIdSet){
+            releaseLock(pageId,tid);
+        }
     }
 }

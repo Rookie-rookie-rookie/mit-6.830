@@ -143,6 +143,16 @@ public class BufferPool {
     public void transactionComplete(TransactionId tid, boolean commit) {
         // some code goes here
         // not necessary for lab1|lab2
+        if(commit){
+            try{
+                flushPages(tid);
+            } catch (IOException e){
+                e.printStackTrace();
+            }
+        } else {
+            recoverPages(tid);
+        }
+        lockManager.transactionComplete(tid);
     }
 
     /**
@@ -254,6 +264,11 @@ public class BufferPool {
     public synchronized  void flushPages(TransactionId tid) throws IOException {
         // some code goes here
         // not necessary for lab1|lab2
+        for(Page page: pageMap.values()){
+            if(tid.equals(page.isDirty())){
+                flushPage(page.getId());
+            }
+        }
     }
 
     /**
@@ -278,6 +293,17 @@ public class BufferPool {
             return;
         }
         throw new DbException("all pages are dirty");
+    }
+
+    private synchronized void recoverPages(TransactionId tid){
+        for(Page page: pageMap.values()){
+            if(tid.equals(page.isDirty())){
+                int tableId = page.getId().getTableId();
+                DbFile file = Database.getCatalog().getDatabaseFile(tableId);
+                Page clearPage = file.readPage(page.getId());
+                pageMap.put(page.getId(),clearPage);
+            }
+        }
     }
 
 }
