@@ -80,6 +80,7 @@ public class BufferPool {
     public  Page getPage(TransactionId tid, PageId pid, Permissions perm)
         throws TransactionAbortedException, DbException {
         Lock.TYPE type = perm == Permissions.READ_ONLY ? Lock.TYPE.SHARE : Lock.TYPE.EXCLUSIVE;
+        long start = System.currentTimeMillis();
         while (true){
             try{
                 if(lockManager.requestLock(pid,tid,type)){
@@ -87,6 +88,10 @@ public class BufferPool {
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
+            }
+            long now = System.currentTimeMillis();
+            if(now - start > 500){
+                throw new TransactionAbortedException();
             }
         }
         Page page = pageMap.get(pid);
