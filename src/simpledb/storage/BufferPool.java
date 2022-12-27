@@ -263,13 +263,21 @@ public class BufferPool {
     private synchronized  void evictPage() throws DbException {
         // some code goes here
         // not necessary for lab1
-        PageId pageId = new ArrayList<>(pageMap.keySet()).get(0);
-        try {
-            flushPage(pageId);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        for(Map.Entry<PageId,Page>entry:pageMap.entrySet()){
+            PageId pid = entry.getKey();
+            Page page = entry.getValue();
+            if(page.isDirty() != null){
+                continue;
+            }
+            try {
+                flushPage(pid);
+            }catch (IOException e){
+                throw new RuntimeException(e);
+            }
+            discardPage(pid);
+            return;
         }
-        discardPage(pageId);
+        throw new DbException("all pages are dirty");
     }
 
 }
