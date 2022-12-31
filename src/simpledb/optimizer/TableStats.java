@@ -8,6 +8,7 @@ import simpledb.execution.SeqScan;
 import simpledb.storage.*;
 import simpledb.transaction.Transaction;
 import simpledb.transaction.TransactionAbortedException;
+import simpledb.transaction.TransactionId;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -99,7 +100,7 @@ public class TableStats {
         HeapFile dbFile = (HeapFile) Database.getCatalog().getDatabaseFile(tableid);
         this.ioCostPerPage = ioCostPerPage;
         this.numPages = dbFile.numPages();
-        DbFileIterator child = dbFile.iterator(null);
+        DbFileIterator child = dbFile.iterator(new TransactionId());
         this.tupleDesc = dbFile.getTupleDesc();
         Map<Integer, Integer> minMap = new HashMap<>();
         Map<Integer, Integer> maxMap = new HashMap<>();

@@ -45,7 +45,6 @@ public class TransactionTest extends SimpleDbTestBase {
             list[i] = new XactionTester(table.getId(), latch);
             list[i].start();
         }
-
         long stopTestTime = System.currentTimeMillis() + TIMEOUT_MILLIS;
         for (XactionTester tester : list) {
             long timeout = stopTestTime - System.currentTimeMillis();

@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class LockManager {
 
-    private ConcurrentHashMap<PageId,ConcurrentHashMap<TransactionId,Lock>>pageLocks;
+    public ConcurrentHashMap<PageId,ConcurrentHashMap<TransactionId,Lock>>pageLocks;
     public LockManager(){
         pageLocks = new ConcurrentHashMap<>();
     }
@@ -57,7 +57,7 @@ public class LockManager {
             }
         }else{
             if(requestType == Lock.TYPE.SHARE){
-                return lock.getType() == Lock.TYPE.EXCLUSIVE;
+                return lock.getType() == Lock.TYPE.SHARE;
             }else{
                 if(pageLock.size() > 1){
                     throw new TransactionAbortedException();
@@ -103,5 +103,22 @@ public class LockManager {
         for(PageId pageId:pageIdSet){
             releaseLock(pageId,tid);
         }
+    }
+
+    public void dumpLock(){
+        System.out.println("------------------lock dump begin---------------------");
+        for(Map.Entry<PageId,ConcurrentHashMap<TransactionId,Lock>> entry:pageLocks.entrySet()){
+            System.out.println("pageId:" + entry.getKey().hashCode());
+            ConcurrentHashMap<TransactionId,Lock> map = entry.getValue();
+            for(Map.Entry<TransactionId,Lock>m:map.entrySet()){
+                System.out.println("tid:" + m.getKey().hashCode());
+                System.out.print("has lock:" + (m.getValue() != null));
+                if((m.getValue() != null)){
+                    System.out.println("lock type:" + m.getValue().getType());
+                }
+            }
+            System.out.println();
+        }
+        System.out.println("------------------lock dump finish---------------------");
     }
 }

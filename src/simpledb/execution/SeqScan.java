@@ -121,6 +121,8 @@ public class SeqScan implements OpIterator {
 
     public void rewind() throws DbException, NoSuchElementException,
             TransactionAbortedException {
+        System.out.println("begin to rewind");
         dbFileIterator.rewind();
+        System.out.println("rewind finish");
     }
 }

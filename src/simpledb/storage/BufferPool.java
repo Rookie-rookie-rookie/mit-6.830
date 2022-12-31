@@ -81,6 +81,9 @@ public class BufferPool {
         throws TransactionAbortedException, DbException {
         Lock.TYPE type = perm == Permissions.READ_ONLY ? Lock.TYPE.SHARE : Lock.TYPE.EXCLUSIVE;
         long start = System.currentTimeMillis();
+//        lockManager.dumpLock();
+//        System.out.println("request tran: " + tid.hashCode() + " request page " + pid.hashCode()
+//                         + " request type:" + perm.toString());
         while (true){
             try{
                 if(lockManager.requestLock(pid,tid,type)){
@@ -129,6 +132,7 @@ public class BufferPool {
     public void transactionComplete(TransactionId tid) {
         // some code goes here
         // not necessary for lab1|lab2
+        lockManager.transactionComplete(tid);
     }
 
     /** Return true if the specified transaction has a lock on the specified page */

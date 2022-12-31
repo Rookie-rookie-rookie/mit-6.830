@@ -150,6 +150,7 @@ public class HeapFile implements DbFile {
             break;
         }
         page.insertTuple(t);
+        Database.getBufferPool().unsafeReleasePage(tid, page.getId());
         return Collections.singletonList(page);
     }
 
@@ -166,6 +167,7 @@ public class HeapFile implements DbFile {
         HeapPageId pageId = new HeapPageId(getId(),recordId.getPageId().getPageNumber());
         page = (HeapPage) Database.getBufferPool().getPage(tid,pageId,Permissions.READ_WRITE);
         page.deleteTuple(t);
+        Database.getBufferPool().unsafeReleasePage(tid,pageId);
         return Collections.singletonList(page);
     }
 

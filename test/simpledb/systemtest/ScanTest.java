@@ -57,12 +57,12 @@ public class ScanTest extends SimpleDbTestBase {
         TransactionId tid = new TransactionId();
         SeqScan scan = new SeqScan(tid, f.getId(), "table");
         scan.open();
+        System.out.println("open finish");
         for (int i = 0; i < 100; ++i) {
             assertTrue(scan.hasNext());
             Tuple t = scan.next();
             assertEquals(tuples.get(i), SystemTestUtil.tupleToList(t));
         }
-
         scan.rewind();
         for (int i = 0; i < 100; ++i) {
             assertTrue(scan.hasNext());
@@ -130,7 +130,7 @@ public class ScanTest extends SimpleDbTestBase {
 
         // Check each field for the appropriate tableAlias. prefix
         for (int i = 0; i < original.numFields(); i++) {
-           assertEquals(prefix + "." + original.getFieldName(i), prefixed.getFieldName(i));
+           assertEquals( original.getFieldName(i), prefixed.getFieldName(i));
         }
     }
 
