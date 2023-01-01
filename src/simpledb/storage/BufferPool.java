@@ -92,10 +92,10 @@ public class BufferPool {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-//            long now = System.currentTimeMillis();
-//            if(now - start > 500){
-//                throw new TransactionAbortedException();
-//            }
+            long now = System.currentTimeMillis();
+            if(now - start > 500){
+                throw new TransactionAbortedException();
+            }
         }
         Page page = pageMap.get(pid);
         if(page == null){//如果在缓存里面，就从磁盘读上来？

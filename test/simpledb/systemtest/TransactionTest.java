@@ -248,7 +248,7 @@ public class TransactionTest extends SimpleDbTestBase {
 
         // Scanning the table must fail because it can't evict the dirty page
         try {
-            AbortEvictionTest.findMagicTuple(f, t);
+            System.out.println(AbortEvictionTest.findMagicTuple(f, t));
             fail("Expected scan to run out of available buffer pages");
         } catch (DbException ignored) {}
         t.commit();

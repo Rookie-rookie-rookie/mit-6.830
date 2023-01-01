@@ -56,8 +56,12 @@ public class LockManager {
                 return false;
             }
         }else{
+            System.out.println("already have a lock");
+            dumpLock();
+            System.out.println("request tid " + tid.hashCode() + "\npid: " + pid.hashCode()
+                            + "lock type:" + requestType);
             if(requestType == Lock.TYPE.SHARE){
-                return lock.getType() == Lock.TYPE.SHARE;
+                return true;
             }else{
                 if(pageLock.size() > 1){
                     throw new TransactionAbortedException();
@@ -114,7 +118,7 @@ public class LockManager {
                 System.out.println("tid:" + m.getKey().hashCode());
                 System.out.print("has lock:" + (m.getValue() != null));
                 if((m.getValue() != null)){
-                    System.out.println("lock type:" + m.getValue().getType());
+                    System.out.println(" lock type:" + m.getValue().getType());
                 }
             }
             System.out.println();
