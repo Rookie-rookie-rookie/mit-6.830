@@ -3,7 +3,6 @@ package simpledb.storage;
 import simpledb.common.Database;
 import simpledb.common.Permissions;
 import simpledb.common.DbException;
-import simpledb.common.DeadlockException;
 import simpledb.lock.Lock;
 import simpledb.lock.LockManager;
 import simpledb.transaction.TransactionAbortedException;
@@ -12,7 +11,6 @@ import simpledb.transaction.TransactionId;
 import java.io.*;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * BufferPool manages the reading and writing of pages into memory from
@@ -77,7 +75,7 @@ public class BufferPool {
      * @param pid the ID of the requested page
      * @param perm the requested permissions on the page
      */
-    public  Page getPage(TransactionId tid, PageId pid, Permissions perm)
+    public Page getPage(TransactionId tid, PageId pid, Permissions perm)
         throws TransactionAbortedException, DbException {
         Lock.TYPE type = perm == Permissions.READ_ONLY ? Lock.TYPE.SHARE : Lock.TYPE.EXCLUSIVE;
         long start = System.currentTimeMillis();
@@ -216,10 +214,10 @@ public class BufferPool {
             throw new DbException("not such a table");
         }
         DbFile dbFile = Database.getCatalog().getDatabaseFile(recordId.getPageId().getTableId());
-        List<Page> pages = dbFile.deleteTuple(tid,t);//先删掉
+        List<Page> pages = dbFile.deleteTuple(tid,t);
         for(Page page:pages){
-            dbFile.writePage(page);//写回dbFile
-            page.markDirty(true,tid);//标记脏位
+            dbFile.writePage(page);
+            page.markDirty(true,tid);
         }
     }
 

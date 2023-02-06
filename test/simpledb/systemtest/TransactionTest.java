@@ -119,16 +119,15 @@ public class TransactionTest extends SimpleDbTestBase {
 
                         // race the other threads to finish the transaction: one will win
                         q1.close();
-
+                        //System.out.println(getName() + " q1 close");
                         // delete old values (i.e., just one row) from table
                         Delete delOp = new Delete(tr.getId(), ss2);
 
                         Query q2 = new Query(delOp, tr.getId());
-
                         q2.start();
                         q2.next();
                         q2.close();
-
+                        //System.out.println(getName() + " q2 close");
                         // set up a Set with a tuple that is one higher than the old one.
                         Set<Tuple> hs = new HashSet<>();
                         hs.add(t);
@@ -140,7 +139,7 @@ public class TransactionTest extends SimpleDbTestBase {
                         q3.start();
                         q3.next();
                         q3.close();
-
+                        //System.out.println(getName() + " q3 close");
                         tr.commit();
                         break;
                     } catch (TransactionAbortedException te) {

@@ -18,11 +18,13 @@ public class LockManager {
 
     public synchronized boolean requestLock(PageId pid, TransactionId tid,Lock.TYPE requestType) throws InterruptedException, TransactionAbortedException {
         ConcurrentHashMap<TransactionId,Lock> pageLock = pageLocks.get(pid);
+        final String thread = Thread.currentThread().getName();
         if(pageLock == null || pageLock.size() == 0){ // not lock
             pageLock = new ConcurrentHashMap<>();
             Lock lock = new Lock(tid,requestType);
             pageLock.put(tid,lock);
             pageLocks.put(pid,pageLock);
+            System.out.println(thread + ": the " + pid.hashCode() + " have no lock, transaction" + tid + " require " + requestType + ", accept");
             return true;
         }
         Lock lock = pageLock.get(tid);
@@ -30,6 +32,7 @@ public class LockManager {
             lock = new Lock(tid,requestType);
             if(requestType == Lock.TYPE.SHARE){
                 if(pageLock.size() > 1){
+                    System.out.println(thread + ": the " + pid.hashCode() + " have many read locks, transaction" + tid + " require " + requestType + ", accept and add a new read lock");
                     lock.setType(Lock.TYPE.SHARE);
                     pageLock.put(tid,lock);
                     pageLocks.put(pid,pageLock);
@@ -47,7 +50,7 @@ public class LockManager {
                         return true;
                     }
                     if(oldLock.getType() == Lock.TYPE.EXCLUSIVE){
-                        wait(15);
+                        wait(50);
                         return false;
                     }
                 }
@@ -56,10 +59,7 @@ public class LockManager {
                 return false;
             }
         }else{
-            System.out.println("already have a lock");
-            dumpLock();
-            System.out.println("request tid " + tid.hashCode() + "\npid: " + pid.hashCode()
-                            + "lock type:" + requestType);
+            System.out.println(thread + ": the " + pid + " have one lock with same txid, transaction" + tid + " require " + requestType + ", accept");
             if(requestType == Lock.TYPE.SHARE){
                 return true;
             }else{

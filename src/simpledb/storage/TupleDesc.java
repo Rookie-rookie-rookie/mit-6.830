@@ -1,6 +1,5 @@
 package simpledb.storage;
 
-import com.sun.source.tree.BreakTree;
 import simpledb.common.Type;
 import simpledb.common.Utility;
 

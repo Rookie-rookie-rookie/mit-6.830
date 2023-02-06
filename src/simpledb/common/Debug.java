@@ -13,6 +13,9 @@ package simpledb.common;
  */
 
 public class Debug {
+
+  public static final boolean DEBUG = true;
+
   private static final int DEBUG_LEVEL;
   static {
       String debug = System.getProperty("simpledb.common.Debug");

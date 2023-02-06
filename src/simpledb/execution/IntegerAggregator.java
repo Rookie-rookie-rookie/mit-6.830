@@ -3,8 +3,6 @@ package simpledb.execution;
 import simpledb.common.Type;
 import simpledb.storage.*;
 
-import java.io.DataOutputStream;
-import java.io.IOException;
 import java.util.*;
 
 /**
